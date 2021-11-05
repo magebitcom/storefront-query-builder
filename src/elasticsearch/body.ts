@@ -444,7 +444,7 @@ export default class RequestBody {
         .orQuery('match_phrase', 'configurable_children.sku', { query: queryText, boost: 1 }))
 
     if ((this.config as any).prefixQuery) {
-      chain = chain.orQuery('multi_match', 'fields', searchableFields, (this.config as any).prefixQuery)
+      chain = chain.orQuery('multi_match', 'fields', (this.config as any).prefixQueryAttributes || searchableFields, (this.config as any).prefixQuery)
     }
 
     return chain

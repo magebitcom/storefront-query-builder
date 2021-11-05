@@ -435,8 +435,16 @@ export default class RequestBody {
       searchableFields.push(attribute + '^' + getBoosts(this.config, attribute))
     }
 
+    const multiMatchConfig = getMultiMatchConfig(this.config, queryText)
+    const multiMatchPrefixConfig = {
+      operator: 'or',
+      query: queryText,
+      type: 'bool_prefix'
+    }
+
     return body
-        .orQuery('multi_match', 'fields', searchableFields, getMultiMatchConfig(this.config, queryText))
+        .orQuery('multi_match', 'fields', searchableFields, multiMatchConfig)
+        .orQuery('multi_match', 'fields', searchableFields, multiMatchPrefixConfig)
         .orQuery('bool', b => b.orQuery('terms', 'configurable_children.sku', queryText.split('-'))
             .orQuery('match_phrase', 'sku', { query: queryText, boost: 1 })
             .orQuery('match_phrase', 'configurable_children.sku', { query: queryText, boost: 1 }))

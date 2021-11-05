@@ -436,18 +436,18 @@ export default class RequestBody {
     }
 
     const multiMatchConfig = getMultiMatchConfig(this.config, queryText)
-    const multiMatchPrefixConfig = {
-      operator: 'or',
-      query: queryText,
-      type: 'bool_prefix'
+
+    let chain = body
+    .orQuery('multi_match', 'fields', searchableFields, multiMatchConfig)
+    .orQuery('bool', b => b.orQuery('terms', 'configurable_children.sku', queryText.split('-'))
+        .orQuery('match_phrase', 'sku', { query: queryText, boost: 1 })
+        .orQuery('match_phrase', 'configurable_children.sku', { query: queryText, boost: 1 }))
+
+    if ((this.config as any).prefixQuery) {
+      chain = chain.orQuery('multi_match', 'fields', searchableFields, (this.config as any).prefixQuery)
     }
 
-    return body
-        .orQuery('multi_match', 'fields', searchableFields, multiMatchConfig)
-        .orQuery('multi_match', 'fields', searchableFields, multiMatchPrefixConfig)
-        .orQuery('bool', b => b.orQuery('terms', 'configurable_children.sku', queryText.split('-'))
-            .orQuery('match_phrase', 'sku', { query: queryText, boost: 1 })
-            .orQuery('match_phrase', 'configurable_children.sku', { query: queryText, boost: 1 }))
+    return chain
   }
 
   protected getSearchText (): string {
